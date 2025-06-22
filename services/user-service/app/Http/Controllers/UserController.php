@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateUserRequest;
+use App\Http\Requests\LoginRequest;
 use Illuminate\Http\Request;
 use App\Http\Services;
 use App\Http\Services\UserService;
@@ -37,10 +38,24 @@ class UserController extends Controller
         ], status: Response::HTTP_CREATED);
    }
 
-   public function login(Request $request)
+   public function login(LoginRequest $request)
    {
-        // Implement login logic here
-        $this->userService->login($request->only('email', 'password'));
-        return response()->json(['message' => 'Login functionality not implemented yet']);
+        $credentials = $request->validated();
+        $user = $this->userService->login($credentials);
+
+        if (!$user) {
+            return Response()->json([
+                'success' => false,
+                'status' => Response::HTTP_UNAUTHORIZED,
+                'message' => 'Invalid credentials'
+            ], status: Response::HTTP_UNAUTHORIZED);
+        }
+
+        return Response()->json([
+            'success' => true,
+            'status' => Response::HTTP_OK,
+            'message' => 'Login successful',
+            'data' => $user
+        ], status: Response::HTTP_OK);
    }
 }

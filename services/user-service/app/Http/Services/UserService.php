@@ -28,17 +28,17 @@ class UserService
         return $user;
     }
 
-    // public function login($credentials)
-    // {
+    public function login($credentials)
+    {
 
-    //     try {
-    //         if (!$token = JWTAuth::attempt($credentials)) {
-    //             return response()->json(['error' => 'Invalid credentials'], Response::HTTP_UNAUTHORIZED);
-    //         }
-    //     } catch (JWTException $e) {
-    //         return response()->json(['error' => 'Could not create token'], Response::HTTP_INTERNAL_SERVER_ERROR);
-    //     }
+        try {
+            if (!$token = JWTAuth::attempt($credentials)) {
+                return response()->json(['error' => 'Invalid credentials'], Response::HTTP_UNAUTHORIZED);
+            }
+        } catch (JWTException $e) {
+            return response()->json(['error' => 'Could not create token'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
 
-    //     return response()->json(['token' => $token], Response::HTTP_OK);
-    // }
+        return response()->json(['token' => $token], Response::HTTP_OK);
+    }
 }
