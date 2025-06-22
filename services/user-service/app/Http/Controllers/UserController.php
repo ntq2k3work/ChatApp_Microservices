@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateUserRequest;
+use App\Http\Requests\ForgotPasswordRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\ResetPasswordRequest;
 use Illuminate\Http\Request;
@@ -78,6 +79,53 @@ class UserController extends Controller
         }
    }
 
+   public function forgotPassword(ForgotPasswordRequest $request)
+   {
+        $validatedData = $request->validated();
+        $email = $validatedData['email'];
+        $user = $this->userService->forgot($email);
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'status' => Response::HTTP_NOT_FOUND,
+                'message' => 'User not found'
+            ], status: Response::HTTP_NOT_FOUND);
+        }
+
+        return response()->json([
+            'success' => true,
+            'status' => Response::HTTP_OK,
+            'message' => 'Password reset link sent to your email'
+        ], status: Response::HTTP_OK);
+   }
+
+   public function resetPassword(Request $request)
+   {
+        $validatedData = $request->validate([
+            'password' => 'required|min:6|confirmed',
+        ]);
+        $password = $validatedData['password'];
+        $token = $request->input('token');
+
+        $user = $this->userService->resetPassword($password, $token);
+        
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'status' => Response::HTTP_UNAUTHORIZED,
+                'message' => 'Invalid or expired token'
+            ], status: Response::HTTP_UNAUTHORIZED);
+        }
+
+        return response()->json([
+            'success' => true,
+            'status' => Response::HTTP_OK,
+            'message' => 'Password reset successful',
+            'data' => $user
+        ], status: Response::HTTP_OK);
+   }
+
    public function refresh(Request $request)
    {
         $newToken = $this->userService->refresh();
@@ -89,7 +137,7 @@ class UserController extends Controller
         ], status: Response::HTTP_OK);
    }
 
-   public function resetPassword(ResetPasswordRequest $request)
+   public function changePassword(ResetPasswordRequest $request)
    {
         $validatedData = $request->validated();
         $email = $validatedData['email'];
@@ -97,7 +145,7 @@ class UserController extends Controller
         $newPassword = $validatedData['password'];
         
         $user = $this->userService->validateOldPassword($email, $oldPassword);
-        $newToken = $this->userService->resetPassword($user, $newPassword);
+        $newToken = $this->userService->changePassword($user, $newPassword);
 
         return response()->json([
             'success' => true,

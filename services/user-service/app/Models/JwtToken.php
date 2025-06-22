@@ -33,4 +33,10 @@ class JwtToken extends Model
         ->where('jti', '!=', $currentJti)
         ->delete();
     }
+
+    public function scopeLogoutAllDevice($query,$userId)
+    {
+        return $query->where('user_id', $userId)
+        ->delete();
+    }
 }

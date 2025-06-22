@@ -2,6 +2,7 @@
 
 namespace App\Http\Services;
 
+use App\Jobs\ProcessForgotPassword;
 use App\Jobs\ProcessSendMail;
 use App\Models\JwtToken;
 use App\Models\User;
@@ -85,7 +86,7 @@ class UserService
         }
     }
 
-    public function resetPassword(User $user, $newPassword)
+    public function changePassword(User $user, $newPassword)
     {
         try {
             $currentJti = JWTAuth::parseToken()->getPayload()->get('jti');
@@ -111,6 +112,21 @@ class UserService
         return $user;
     }
 
+    public function forgot($email)
+    {
+        $user = User::where('email', $email)->first();
+        if (!$user) {
+            Log::error('User not found for email: ' . $email);
+            return response()->json(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Generate a unique token for password reset
+        $token = JWTAuth::fromUser($user);
+
+        dispatch(new ProcessForgotPassword($user,$token));
+        return response()->json(['message' => 'Reset password email sent'], Response::HTTP_OK);
+    }
+
     public function getUser()
     {
         try {
@@ -122,6 +138,23 @@ class UserService
         } catch (\Exception $e) {
             Log::error('Error fetching user: ' . $e->getMessage());
             return response()->json(['error' => 'Could not fetch user'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function resetPassword($password, $token)
+    {
+        try {
+            $user = JWTAuth::setToken($token)->authenticate();
+            JwtToken::logoutAllDevice($user->id);
+            if (!$user) {
+                return response()->json(['error' => 'Invalid or expired token'], Response::HTTP_UNAUTHORIZED);
+            }
+            $user->password = bcrypt($password);
+            $user->save();
+            return $user;
+        } catch (JWTException $e) {
+            Log::error('Error resetting password: ' . $e->getMessage());
+            return response()->json(['error' => 'Could not reset password'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
                 
