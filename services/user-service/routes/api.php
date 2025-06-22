@@ -13,11 +13,15 @@ Route::get('/user', function (Request $request) {
 Route::post('/register', [UserController::class, 'register'])
     ->name('user.register')
     ->middleware('guest');
+
 Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)
     ->middleware('signed')
     ->name('verification.verify');
-
-// Write login
+    
 Route::post('/login', [UserController::class, 'login'])
     ->name('user.login')
     ->middleware('guest');
+
+Route::middleware(['jwt'])->group(function () {
+    Route::post('/logout', [UserController::class, 'logout'])->name('user.logout');
+});

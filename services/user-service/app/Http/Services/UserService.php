@@ -4,6 +4,7 @@ namespace App\Http\Services;
 
 use App\Jobs\ProcessSendMail;
 use App\Models\User;
+use Illuminate\Container\Attributes\Auth;
 use Illuminate\Contracts\Queue\Job;
 use Illuminate\Http\Response;
 use Tymon\JWTAuth\Exceptions\JWTException;
@@ -41,4 +42,17 @@ class UserService
 
         return response()->json(['token' => $token], Response::HTTP_OK);
     }
+
+    public function logout()
+    {
+        try {
+            JWTAuth::invalidate(JWTAuth::getToken());
+            Log::info('User logged out successfully');
+            return response()->json(['message' => 'Successfully logged out'], Response::HTTP_OK);
+        } catch (JWTException $e) {
+            return response()->json(['error' => 'Could not log out'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
 }

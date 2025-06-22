@@ -58,4 +58,30 @@ class UserController extends Controller
             'data' => $user
         ], status: Response::HTTP_OK);
    }
+
+   public function logout(Request $request)
+   {
+        try {
+            $token = $request->bearerToken();
+            if (!$token) {
+                return response()->json([
+                    'success' => false,
+                    'status' => Response::HTTP_UNAUTHORIZED,
+                    'message' => 'No token provided'
+                ], status: Response::HTTP_UNAUTHORIZED);
+            }
+            $this->userService->logout($token);
+            return response()->json([
+                'success' => true,
+                'status' => Response::HTTP_OK,
+                'message' => 'Logout successful'
+            ], status: Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+                'message' => 'Logout failed'
+            ], status: Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+   }
 }
