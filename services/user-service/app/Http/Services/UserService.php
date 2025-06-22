@@ -75,7 +75,7 @@ class UserService
                 'device_name' => request()->header('User-Agent'),
                 'expired_at' => $expiresAt,
             ]);
-            
+
             JwtToken::where('jti', $oldJti)->delete();
 
             Log::info('Token refreshed successfully');
@@ -85,13 +85,13 @@ class UserService
         }
     }
 
-    public function resetPassword($user, $newPassword)
+    public function resetPassword(User $user, $newPassword)
     {
         try {
-            $user->password = bcrypt($newPassword);
-            $user->save();
             $currentJti = JWTAuth::parseToken()->getPayload()->get('jti');
             JwtToken::logoutWithoutThisDevice($currentJti);
+            $user->password = bcrypt($newPassword);
+            $user->save();
             $token = JWTAuth::fromUser($user);  
             Log::info('Password reset successfully for user: ' . $user->email);
             return $token;
@@ -99,6 +99,16 @@ class UserService
             Log::error('Error resetting password for user: ' . $user->email . ' ' . $e->getMessage());
             return response()->json(['error' => 'Could not reset password'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    public function validateOldPassword($email, $oldPassword)
+    {
+        $user = User::where('email', $email)->first();
+        if (!$user || !password_verify($oldPassword, $user->password)) {
+            Log::error('Invalid old password for user: ' . $email);
+            return response()->json(['error' => 'Invalid old password'], Response::HTTP_UNAUTHORIZED);
+        }
+        return $user;
     }
                 
 }

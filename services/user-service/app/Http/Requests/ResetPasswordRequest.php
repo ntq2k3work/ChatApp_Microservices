@@ -26,6 +26,7 @@ class ResetPasswordRequest extends FormRequest
     {
         return [
             'email' => 'required|email|exists:users,email',
+            'old_password' => 'required',
             'password' => 'required|string|min:6|confirmed',
         ];
     }
@@ -45,6 +46,7 @@ class ResetPasswordRequest extends FormRequest
             'password.string' => 'Password must be a string.',
             'password.min' => 'Password must be at least 6 characters.',
             'password.confirmed' => 'Password confirmation does not match.',
+            'old_password.required' => 'Old password is required.',
         ];
     }
 

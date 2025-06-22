@@ -93,9 +93,11 @@ class UserController extends Controller
    {
         $validatedData = $request->validated();
         $email = $validatedData['email'];
-        $newPassword = $validatedData['new_password'];
-
-        $newToken = $this->userService->resetPassword($email, $newPassword);
+        $oldPassword = $validatedData['old_password'];
+        $newPassword = $validatedData['password'];
+        
+        $user = $this->userService->validateOldPassword($email, $oldPassword);
+        $newToken = $this->userService->resetPassword($user, $newPassword);
 
         return response()->json([
             'success' => true,
