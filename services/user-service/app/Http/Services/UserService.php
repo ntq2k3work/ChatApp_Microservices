@@ -110,5 +110,19 @@ class UserService
         }
         return $user;
     }
+
+    public function getUser()
+    {
+        try {
+            $user = auth()->user();
+            if (!$user) {
+                return response()->json(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
+            }
+            return $user;
+        } catch (\Exception $e) {
+            Log::error('Error fetching user: ' . $e->getMessage());
+            return response()->json(['error' => 'Could not fetch user'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
                 
 }

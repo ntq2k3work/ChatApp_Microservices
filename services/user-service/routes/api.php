@@ -29,6 +29,7 @@ Route::post('/refresh', [UserController::class, 'refresh'])
 
 Route::middleware(['jwt','check.jti'])->group(function () {
     Route::post('/logout', [UserController::class, 'logout'])->name('user.logout');
-    Route::post('/password/reset', [UserController::class, 'resetPassword'])
-        ->name('user.reset_password');
+    Route::post('/password/reset', [UserController::class, 'resetPassword'])->name('user.reset_password');
+    Route::get('/user/profile', [UserController::class, 'profile'])->name('user.profile');
+    
 });

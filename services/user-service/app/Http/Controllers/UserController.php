@@ -107,4 +107,13 @@ class UserController extends Controller
             'status' => Response::HTTP_OK
         ], status: Response::HTTP_OK);
    }
+
+   public function profile(Request $request)
+   {
+        $user = $this->userService->getUser();
+        return response()->json([
+            'success' => true,
+            'data' => $user,
+        ], status: Response::HTTP_OK);
+   }
 }
