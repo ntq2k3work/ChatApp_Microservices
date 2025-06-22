@@ -17,10 +17,15 @@ Route::post('/register', [UserController::class, 'register'])
 Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)
     ->middleware('signed')
     ->name('verification.verify');
-    
+
 Route::post('/login', [UserController::class, 'login'])
     ->name('user.login')
     ->middleware('guest');
+
+Route::post('/refresh', [UserController::class, 'refresh'])
+    ->name('user.refresh')
+    ->middleware('jwt');
+
 
 Route::middleware(['jwt'])->group(function () {
     Route::post('/logout', [UserController::class, 'logout'])->name('user.logout');

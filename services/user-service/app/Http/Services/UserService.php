@@ -48,11 +48,20 @@ class UserService
         try {
             JWTAuth::invalidate(JWTAuth::getToken());
             Log::info('User logged out successfully');
-            return response()->json(['message' => 'Successfully logged out'], Response::HTTP_OK);
+            return true;
         } catch (JWTException $e) {
             return response()->json(['error' => 'Could not log out'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
-
+    public function refresh()
+    {
+        try {
+            $newToken = JWTAuth::parseToken()->refresh();
+            Log::info('Token refreshed successfully');
+            return $newToken;
+        }catch (JWTException $e) {
+            return response()->json(['error' => 'Could not refresh token'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 }
