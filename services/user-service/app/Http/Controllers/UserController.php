@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateUserRequest;
 use App\Http\Requests\LoginRequest;
+use App\Http\Requests\ResetPasswordRequest;
 use Illuminate\Http\Request;
 use App\Http\Services;
 use App\Http\Services\UserService;
@@ -85,6 +86,23 @@ class UserController extends Controller
             'token' => $newToken,
             'status' => Response::HTTP_OK,
             'expires_in' => auth()->factory()->getTTL() * 60
+        ], status: Response::HTTP_OK);
+   }
+
+   public function resetPassword(ResetPasswordRequest $request)
+   {
+        $validatedData = $request->validated();
+        $email = $validatedData['email'];
+        $newPassword = $validatedData['new_password'];
+
+        $newToken = $this->userService->resetPassword($email, $newPassword);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password reset successfully',
+            'token' => $newToken,
+            'expires_in' => auth()->factory()->getTTL() * 60,
+            'status' => Response::HTTP_OK
         ], status: Response::HTTP_OK);
    }
 }

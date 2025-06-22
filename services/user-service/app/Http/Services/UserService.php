@@ -3,6 +3,7 @@
 namespace App\Http\Services;
 
 use App\Jobs\ProcessSendMail;
+use App\Models\JwtToken;
 use App\Models\User;
 use Illuminate\Container\Attributes\Auth;
 use Illuminate\Contracts\Queue\Job;
@@ -46,6 +47,8 @@ class UserService
     public function logout()
     {
         try {
+            $jti = auth()->payload()->get('jti');
+            JwtToken::where('jti', $jti)->delete();
             JWTAuth::invalidate(JWTAuth::getToken());
             Log::info('User logged out successfully');
             return true;
@@ -57,11 +60,45 @@ class UserService
     public function refresh()
     {
         try {
+            $oldPayload = JWTAuth::parseToken()->getPayload();
+            $oldJti = $oldPayload->get('jti');
+            $userId = $oldPayload->get('sub');
             $newToken = JWTAuth::parseToken()->refresh();
+
+             $newPayload = JWTAuth::setToken($newToken)->getPayload();
+            $newJti = $newPayload->get('jti');
+            $expiresAt = now()->addMinutes(config('jwt.ttl'));
+
+            JwtToken::create([
+                'user_id' => $userId,
+                'jti' => $newJti,
+                'device_name' => request()->header('User-Agent'),
+                'expired_at' => $expiresAt,
+            ]);
+            
+            JwtToken::where('jti', $oldJti)->delete();
+
             Log::info('Token refreshed successfully');
             return $newToken;
         }catch (JWTException $e) {
             return response()->json(['error' => 'Could not refresh token'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    public function resetPassword($user, $newPassword)
+    {
+        try {
+            $user->password = bcrypt($newPassword);
+            $user->save();
+            $currentJti = JWTAuth::parseToken()->getPayload()->get('jti');
+            JwtToken::logoutWithoutThisDevice($currentJti);
+            $token = JWTAuth::fromUser($user);  
+            Log::info('Password reset successfully for user: ' . $user->email);
+            return $token;
+        } catch (\Exception $e) {
+            Log::error('Error resetting password for user: ' . $user->email . ' ' . $e->getMessage());
+            return response()->json(['error' => 'Could not reset password'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+                
 }

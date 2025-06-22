@@ -9,7 +9,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Tymon\JWTAuth\Contracts\JWTSubject;
-
+use Illuminate\Support\Str;
 class User extends Authenticatable implements JWTSubject,MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -62,7 +62,15 @@ class User extends Authenticatable implements JWTSubject,MustVerifyEmail
      */
     public function getJWTCustomClaims()
     {
+        $jti = Str::uuid()->toString();
+        JwtToken::create([
+            'user_id'     => $this->id,
+            'jti'         => $jti,
+            'device_name' => request()->header('User-Agent'),
+            'expired_at'  => now()->addMinutes(config('jwt.ttl')),
+        ]);
         return [
+            'jti' => $jti,
             'user_id' => $this->id,
             'email' => $this->email,
             'name' => $this->name,

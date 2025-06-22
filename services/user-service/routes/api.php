@@ -27,6 +27,6 @@ Route::post('/refresh', [UserController::class, 'refresh'])
     ->middleware('jwt');
 
 
-Route::middleware(['jwt'])->group(function () {
+Route::middleware(['jwt','check.jti'])->group(function () {
     Route::post('/logout', [UserController::class, 'logout'])->name('user.logout');
 });
