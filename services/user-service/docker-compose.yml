@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: laravel-app
+    container_name: laravel-app
+    volumes:
+      - .:/var/www
+    ports:
+      - "8000:9000"  # Laravel exposed via php-fpm or nginx (nếu dùng reverse proxy)
+    depends_on:
+      - db
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - DB_CONNECTION=pgsql
+      - DB_HOST=127.0.0.1
+      - DB_PORT=5432
+      - DB_DATABASE=users_service_db
+      - DB_USERNAME=users_service_db
+      - DB_PASSWORD=123456
+      - QUEUE_CONNECTION=database
+
+  db:
+    image: postgres:15
+    container_name: pgsql-db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: users_service_db
+      POSTGRES_USER: users_service_db
+      POSTGRES_PASSWORD: 123456
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
